@@ -41,6 +41,20 @@ app.get("/api/maxvals", (req,res)=>{
         );   
 });
 
+// Route to get all software max customer
+app.get("/api/tabledata", (req,res)=>{
+    query = "SELECT services.idservices, cliente.name as cliente, cliente.contact, software.name, services.kind, services.folio, services.date, services.service, services.work  FROM services INNER JOIN cliente ON cliente.idcustomer = services.idcustomer INNER JOIN software ON software.idsoft = services.idsoft";
+    db.query(query, (err,result)=>{
+        if(err) {
+        console.log(err)
+        } 
+    res.send(result)
+    }
+        );   
+});
+
+
+
 // Route to get one post
 app.get("/api/getFromId/:id", (req,res)=>{
 
@@ -60,8 +74,6 @@ app.post('/api/create', (req,res)=> {
 const username = req.body.name;
 const title = req.body.title;
 const text = req.body.text;
-
-
 
 db.query("INSERT INTO posts (title, post_text, user_name) VALUES (?,?,?)",[title,text,username], (err,result)=>{
    if(err) {
@@ -86,7 +98,63 @@ app.get("/api/softid/:idsoft", (req,res)=>{
         );   
 });
 
+// Select tipo de capacitacion
 
+
+app.get("/api/capacitacionpdf/:idservice", (req,res)=>{
+
+    const id = req.params.idservice;
+        query=`SELECT services.work as work, software.name as soft, cliente.phone as phone, cliente.address as address, cliente.contact as contact, cliente.email as email, services.kind, services.service as service, services.folio as folio FROM services INNER JOIN cliente ON cliente.idcustomer = services.idcustomer INNER JOIN software ON software.idsoft = services.idsoft  where services.idservices = ? and services.kind = 'Capacitación'`
+        db.query(query, [id], (err,result)=>{
+            if(err) {
+            console.log(err)
+            } 
+        res.send(result)
+        }
+        );   
+});
+
+app.get("/api/servicepdf/:idservice", (req,res)=>{
+
+    const id = req.params.idservice;
+        query=`SELECT services.work as work,
+            software.name as soft,
+            cliente.phone as phone, cliente.address as address, cliente.contact as contact, cliente.email as email,
+            services.kind, services.service as service, services.folio as folio,
+            validations.qequipment, validations.qlogo, validations.qreq, validations.qcsd, validations.qnode, validations.qnotification
+            FROM services 
+            INNER JOIN cliente ON cliente.idcustomer = services.idcustomer 
+            INNER JOIN software ON software.idsoft = services.idsoft
+            INNER JOIN validations ON services.idvals = validations.idvals
+            WHERE services.idservices = ?;`
+        db.query(query, [id], (err,result)=>{
+            if(err) {
+            console.log(err)
+            } 
+        res.send(result)
+        }
+        );   
+});
+
+app.get("/api/servicevalspdf/:idservice", (req,res)=>{
+
+    const id = req.params.idservice;
+        query=`SELECT
+        validations.cserver_processor, validations.cserver_ram, validations.cserver_memory, validations.cserver_os, validations.cserver_internet,
+        validations.cstation_processor, validations.cstation_ram, validations.cstation_memory, validations.cstation_os
+        FROM services 
+        INNER JOIN cliente ON cliente.idcustomer = services.idcustomer 
+        INNER JOIN software ON software.idsoft = services.idsoft
+        INNER JOIN validations ON services.idvals = validations.idvals
+        WHERE services.idservices = ?;`
+        db.query(query, [id], (err,result)=>{
+            if(err) {
+            console.log(err)
+            } 
+        res.send(result)
+        }
+        );   
+});
 
 // Route for creating the post
 app.post('/api/service', (req,res)=> {
@@ -102,6 +170,7 @@ const idcustomer = req.body.idcustomer;
 db.query("INSERT INTO services (service, work, kind, folio, idsoft, idvals, idcustomer) VALUES (?,?,?,?,?,?,?)",
     [service, work, kind, folio, idsoft, idvals, idcustomer ], (err,result)=>{
     if(err) {
+       
         console.log(err)
     } 
     console.log(result)
@@ -114,8 +183,7 @@ db.query("INSERT INTO services (service, work, kind, folio, idsoft, idvals, idcu
 app.post('/api/servicecap', (req,res)=> {
 
     const service = req.body.service;
-    const work = req.body.work;
-    
+    const work = req.body.work;    
     const kind = req.body.kind;
     const folio = req.body.folio; 
     const idsoft = req.body.idsoft;    
@@ -124,6 +192,7 @@ app.post('/api/servicecap', (req,res)=> {
     db.query("INSERT INTO services (service, work, kind, folio, idsoft, idcustomer) VALUES (?,?,?,?,?,?)",
         [service, work, kind, folio, idsoft, idcustomer ], (err,result)=>{
         if(err) {
+            console.log("error")
             console.log(err)
         } 
         console.log(result)
